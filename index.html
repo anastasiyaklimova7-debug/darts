@@ -667,7 +667,7 @@ function drawBoardText() {
 function drawVectorDart() {
     const d = state.dart;
     ctx.save();
-    ctx.translate(d.x, d.y);
+    ctx.translate((Math.round(d.x), Math.round(d.y));
     ctx.rotate(d.rotation);
     ctx.scale(1.4, 1.4); 
 
