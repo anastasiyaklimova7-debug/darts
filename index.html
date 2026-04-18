@@ -77,8 +77,8 @@
     <canvas id="gameCanvas"></canvas>
 
     <div class="ui-layer">
-        <!-- Изменено: отступ слева уменьшен (left-[8%] и md:left-[10%]), чтобы счет был левее -->
-        <div class="absolute top-[10%] left-[8%] md:top-[12%] md:left-[10%] flex flex-col items-center z-20 -rotate-2 opacity-90">
+        <!-- Изменено: счет сдвинут еще правее (+15mm) -->
+        <div class="absolute top-[10%] left-[calc(8%+15mm)] md:top-[12%] md:left-[calc(10%+15mm)] flex flex-col items-center z-20 -rotate-2 opacity-90">
             <span class="text-white/95 text-5xl md:text-7xl font-black leading-none drop-shadow-md" id="scoreDisplay" style="font-family: 'Chalkboard SE', 'Comic Sans MS', cursive;">0</span>
         </div>
 
