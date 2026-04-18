@@ -14,38 +14,26 @@
             --panel-bg: rgba(3, 7, 18, 0.62);
         }
 
-        /* 1. ФОН БРАУЗЕРА (ДЛЯ ЧЕРНЫХ ПОЛОС ПО КРАЯМ) */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #000000; /* Цвет полей за пределами игры */
-            display: flex;
-            justify-content: center;
-            align-items: center;
             overflow: hidden;
+            background: radial-gradient(circle at top, #22324f 0%, var(--bg-dark) 65%);
             touch-action: none;
-            user-select: none;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
         }
 
-        /* 2. ГЛАВНЫЙ КОНТЕЙНЕР ИГРЫ (ЖЕСТКИЕ ПРОПОРЦИИ 16:9) */
-        #game-wrapper {
+        body {
             position: relative;
-            width: 100vw;
-            height: 56.25vw; /* 16:9 ratio */
-            max-height: 100vh;
-            max-width: 177.78vh; /* 16/9 ratio */
-            background: radial-gradient(circle at top, #22324f 0%, var(--bg-dark) 65%);
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
         }
 
         #gameCanvas {
             display: block;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
         }
 
         .ui-layer {
@@ -69,12 +57,11 @@
     </style>
 </head>
 <body>
-
-<div id="game-wrapper">
     <canvas id="gameCanvas"></canvas>
 
     <div class="ui-layer">
-        <div class="absolute top-[10%] left-[15%] md:top-[12%] md:left-[18%] flex flex-col items-center z-20 -rotate-2 opacity-90">
+        <!-- Score: сдвинуто немного левее -->
+        <div class="absolute top-[10%] left-[10%] md:top-[12%] md:left-[12%] flex flex-col items-center z-20 -rotate-2 opacity-90">
             <span class="text-white/95 text-5xl md:text-7xl font-black leading-none drop-shadow-md" id="scoreDisplay" style="font-family: 'Chalkboard SE', 'Comic Sans MS', cursive;">0</span>
         </div>
 
@@ -82,6 +69,7 @@
             <div id="feedbackMessage" class="text-4xl md:text-6xl font-black opacity-0 transition-all duration-300 drop-shadow-2xl text-center" style="text-shadow: 0 4px 10px rgba(0,0,0,0.8);"></div>
         </div>
 
+        <!-- Поле с предложением: опущено максимально вниз -->
         <div class="absolute bottom-0 left-0 w-full flex justify-center z-20 px-2 md:px-4 pb-1 md:pb-2">
             <div id="sentenceContainer" class="w-full max-w-4xl rounded-2xl p-3 md:p-5 text-center transition-all bg-black/30 backdrop-blur-md border border-white/10 shadow-lg">
                 <p id="currentSentence" class="text-xl md:text-4xl font-semibold text-white tracking-wide leading-relaxed min-h-[3rem] md:min-h-[4rem] drop-shadow-md"></p>
@@ -127,7 +115,6 @@
             </button>
         </div>
     </div>
-</div>
 
 <script>
 const FRAME_MS = 1000 / 60;
@@ -135,8 +122,6 @@ const FRAME_DT = 1 / 60;
 const ROUND_DELAY_MS = 3200;
 const FEEDBACK_FADE_MS = 1400;
 
-// НОВАЯ ССЫЛКА НА КОНТЕЙНЕР
-const wrapper = document.getElementById('game-wrapper');
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -176,6 +161,10 @@ const images = {
     bg: new Image(),
     dart: new Image()
 };
+
+// ВАЖНО: Мы убрали 'anonymous', так как это вызывало ошибку блокировки CORS сервером картинок
+// images.bg.crossOrigin = 'anonymous';
+// images.dart.crossOrigin = 'anonymous';
 
 let imagesLoaded = 0;
 let audioCtx;
@@ -227,12 +216,18 @@ function checkImagesLoaded() {
 
 images.bg.onload = checkImagesLoaded;
 images.dart.onload = checkImagesLoaded;
-images.bg.onerror = (e) => { checkImagesLoaded(); };
-images.dart.onerror = (e) => { checkImagesLoaded(); };
+images.bg.onerror = (e) => {
+    console.warn('Background image failed to load', e);
+    checkImagesLoaded(); // Все равно продолжаем, даже если ошибка
+};
+images.dart.onerror = (e) => {
+    console.warn('Dart image failed to load', e);
+    checkImagesLoaded(); // Все равно продолжаем
+};
 
 images.bg.src = 'https://anastasiyaklimova7-debug.github.io/darts/clean_image%20(62).png';
-images.dart.src = 'https://anastasiyaklimova7-debug.github.io/darts/darts.png';
-//images.dart.src = 'https://anastasiyaklimova7-debug.github.io/darts/Gemini_Generated_Image_tfazj9tfazj9tfaz.png';
+images.dart.src = 'https://anastasiyaklimova7-debug.github.io/darts/Gemini_Generated_Image_tfazj9tfazj9tfaz.png';
+
 function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -247,7 +242,9 @@ function playThwackSound() {
     const bufferSize = Math.floor(audioCtx.sampleRate * 0.05);
     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i += 1) { data[i] = Math.random() * 2 - 1; }
+    for (let i = 0; i < bufferSize; i += 1) {
+        data[i] = Math.random() * 2 - 1;
+    }
     const noise = audioCtx.createBufferSource();
     noise.buffer = buffer;
     const filter = audioCtx.createBiquadFilter();
@@ -306,8 +303,14 @@ function shuffleArray(items) {
 }
 
 function clearRoundTimers() {
-    if (state.roundTimer) { clearTimeout(state.roundTimer); state.roundTimer = null; }
-    if (state.feedbackTimer) { clearTimeout(state.feedbackTimer); state.feedbackTimer = null; }
+    if (state.roundTimer) {
+        clearTimeout(state.roundTimer);
+        state.roundTimer = null;
+    }
+    if (state.feedbackTimer) {
+        clearTimeout(state.feedbackTimer);
+        state.feedbackTimer = null;
+    }
 }
 
 function updateBoardMetrics() {
@@ -316,17 +319,15 @@ function updateBoardMetrics() {
     state.board.radius = Math.min(state.width, state.height) * 0.28;
 }
 
-// ИЗМЕНЕНО: Ресайз теперь опирается на wrapper, а не на окно браузера
 function resize() {
-    state.width = wrapper.clientWidth;
-    state.height = wrapper.clientHeight;
+    state.width = window.innerWidth;
+    state.height = window.innerHeight;
     state.dpr = Math.max(1, window.devicePixelRatio || 1);
 
     canvas.width = Math.round(state.width * state.dpr);
     canvas.height = Math.round(state.height * state.dpr);
-    
-    // ВАЖНО: больше не задаем canvas.style.width жестко в пикселях, 
-    // CSS width: 100% сделает это лучше.
+    canvas.style.width = `${state.width}px`;
+    canvas.style.height = `${state.height}px`;
 
     ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
     ctx.imageSmoothingEnabled = true;
@@ -376,7 +377,11 @@ function showFeedback(text, colorClass) {
 
 function pickNextSentence() {
     clearRoundTimers();
-    if (state.queue.length === 0) { endGame(); return; }
+
+    if (state.queue.length === 0) {
+        endGame();
+        return;
+    }
 
     state.isWaiting = false;
     resetDart();
@@ -397,7 +402,9 @@ function startGame() {
     clearRoundTimers();
     endScreen.style.display = 'none';
     startScreen.style.opacity = '0';
-    setTimeout(() => { startScreen.style.display = 'none'; }, 300);
+    setTimeout(() => {
+        startScreen.style.display = 'none';
+    }, 300);
 
     state.score = 0;
     state.queue = shuffleArray(sentences);
@@ -417,34 +424,29 @@ function endGame() {
     endScreen.style.display = 'flex';
 }
 
-// ИЗМЕНЕНО: теперь координаты пересчитываются с учетом отступов (черных полос)
 function getPointerPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    let clientX, clientY;
-    
     if (e.touches && e.touches[0]) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-    } else {
-        clientX = e.clientX;
-        clientY = e.clientY;
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
     }
-    
-    return { 
-        x: clientX - rect.left, 
-        y: clientY - rect.top 
-    };
+    return { x: e.clientX, y: e.clientY };
 }
 
 function triggerGuess(guess) {
-    if (!state.isRunning || state.isWaiting || !state.currentItem || state.dart.mode === 'flying') return;
+    if (!state.isRunning || state.isWaiting || !state.currentItem || state.dart.mode === 'flying') {
+        return;
+    }
+
     initAudio();
     shootDart(guess);
 }
 
 function handlePointerDown(e) {
-    if (e.cancelable) e.preventDefault();
-    if (!state.isRunning || state.isWaiting || !state.currentItem || state.dart.mode === 'flying') return;
+    if (e.cancelable) {
+        e.preventDefault();
+    }
+    if (!state.isRunning || state.isWaiting || !state.currentItem || state.dart.mode === 'flying') {
+        return;
+    }
 
     const pos = getPointerPos(e);
     const dx = pos.x - state.board.cx;
@@ -484,7 +486,9 @@ function handleKeyDown(e) {
         return;
     }
 
-    if (!state.isRunning || state.isWaiting) return;
+    if (!state.isRunning || state.isWaiting) {
+        return;
+    }
 
     if (e.key === 'ArrowLeft') {
         e.preventDefault();
@@ -499,8 +503,8 @@ function shootDart(guess) {
     state.dart.guess = guess;
     state.dart.startX = state.width / 2;
     state.dart.startY = state.height + 100;
-    state.dart.targetX = state.board.cx + 12; 
-    state.dart.targetY = state.board.cy + 25; 
+    state.dart.targetX = state.board.cx + 12; // сдвиг визуального попадания правее
+    state.dart.targetY = state.board.cy + 25; // сдвиг визуального попадания выше
     state.dart.baseAngle = Math.atan2(state.dart.targetY - state.dart.startY, state.dart.targetX - state.dart.startX);
     state.dart.x = state.dart.startX;
     state.dart.y = state.dart.startY;
@@ -531,7 +535,9 @@ function processHit() {
             timerBar.style.width = '0%';
         }, 40);
 
-        state.roundTimer = setTimeout(() => { pickNextSentence(); }, ROUND_DELAY_MS);
+        state.roundTimer = setTimeout(() => {
+            pickNextSentence();
+        }, ROUND_DELAY_MS);
     } else {
         state.dart.mode = 'falling';
         state.isWaiting = true;
@@ -541,7 +547,9 @@ function processHit() {
 }
 
 function stepSimulation(dt = FRAME_DT) {
-    if (!state.isRunning) return;
+    if (!state.isRunning) {
+        return;
+    }
 
     const d = state.dart;
 
@@ -572,7 +580,10 @@ function stepSimulation(dt = FRAME_DT) {
 function getCoverRect(imgWidth, imgHeight, targetWidth, targetHeight) {
     const targetRatio = targetWidth / targetHeight;
     const imageRatio = imgWidth / imgHeight;
-    let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
+    let drawWidth;
+    let drawHeight;
+    let offsetX = 0;
+    let offsetY = 0;
 
     if (targetRatio > imageRatio) {
         drawWidth = targetWidth;
@@ -583,6 +594,7 @@ function getCoverRect(imgWidth, imgHeight, targetWidth, targetHeight) {
         drawWidth = targetHeight * imageRatio;
         offsetX = (targetWidth - drawWidth) / 2;
     }
+
     return { drawWidth, drawHeight, offsetX, offsetY };
 }
 
@@ -653,6 +665,7 @@ function drawBoardText() {
     ctx.fillText('ANY', cx + offset, cy);
     ctx.shadowBlur = 0;
     
+    // Обновленный четкий разграничитель со сдвигом на ~1 мм влево
     const lineX = cx - 3;
     ctx.beginPath();
     ctx.moveTo(lineX, cy - state.board.radius);
@@ -669,7 +682,7 @@ function drawVectorDart() {
     ctx.save();
     ctx.translate(d.x, d.y);
     ctx.rotate(d.rotation);
-    ctx.scale(1.4, 1.4); 
+    ctx.scale(1.4, 1.4); // Увеличиваем размер резервного нарисованного дротика
 
     ctx.fillStyle = '#dbe4ee';
     ctx.beginPath();
@@ -696,7 +709,9 @@ function drawVectorDart() {
 
 function drawDart() {
     const d = state.dart;
-    if (d.mode === 'hidden') return;
+    if (d.mode === 'hidden') {
+        return;
+    }
 
     let angle = d.baseAngle;
     if (d.mode === 'flying') {
@@ -714,7 +729,7 @@ function drawDart() {
         return;
     }
 
-    const dartW = 75; 
+    const dartW = 75; // Было 54. Сделали дротик крупнее.
     const dartH = dartW * (images.dart.naturalHeight / images.dart.naturalWidth);
 
     ctx.save();
@@ -737,13 +752,55 @@ function draw() {
 }
 
 function animationLoop(timestamp) {
-    if (!lastFrameTs) lastFrameTs = timestamp;
+    if (!lastFrameTs) {
+        lastFrameTs = timestamp;
+    }
+
     const deltaMs = Math.min(100, timestamp - lastFrameTs || FRAME_MS);
     const frames = Math.max(1, Math.round(deltaMs / FRAME_MS));
-    for (let i = 0; i < frames; i += 1) { stepSimulation(FRAME_DT); }
+    for (let i = 0; i < frames; i += 1) {
+        stepSimulation(FRAME_DT);
+    }
     draw();
     lastFrameTs = timestamp;
     animationFrameId = window.requestAnimationFrame(animationLoop);
+}
+
+function renderGameToText() {
+    const mode = state.isRunning ? (state.isWaiting ? 'waiting' : 'playing') : (endScreen.style.display === 'flex' ? 'game_over' : 'start');
+    return JSON.stringify({
+        mode,
+        coordinateSystem: 'origin top-left; x increases right; y increases down; units are CSS pixels',
+        score: state.score,
+        remaining: state.queue.length,
+        sentence: state.currentItem ? state.currentItem.text : null,
+        board: {
+            centerX: Math.round(state.board.cx),
+            centerY: Math.round(state.board.cy),
+            radius: Math.round(state.board.radius),
+            leftSide: 'some',
+            rightSide: 'any'
+        },
+        dart: {
+            x: Math.round(state.dart.x),
+            y: Math.round(state.dart.y),
+            mode: state.dart.mode,
+            guess: state.dart.guess
+        },
+        ui: {
+            feedback: state.feedback,
+            startVisible: startScreen.style.display !== 'none',
+            endVisible: endScreen.style.display === 'flex'
+        }
+    });
+}
+
+function advanceTime(ms) {
+    const frames = Math.max(1, Math.round(ms / FRAME_MS));
+    for (let i = 0; i < frames; i += 1) {
+        stepSimulation(FRAME_DT);
+    }
+    draw();
 }
 
 function init() {
@@ -757,8 +814,18 @@ function init() {
     canvas.addEventListener('mousedown', handlePointerDown);
     canvas.addEventListener('touchstart', handlePointerDown, { passive: false });
 
-    btnStart.addEventListener('click', () => { initAudio(); startGame(); });
-    btnPlayAgain.addEventListener('click', () => { initAudio(); startGame(); });
+    btnStart.addEventListener('click', () => {
+        initAudio();
+        startGame();
+    });
+
+    btnPlayAgain.addEventListener('click', () => {
+        initAudio();
+        startGame();
+    });
+
+    window.render_game_to_text = renderGameToText;
+    window.advanceTime = advanceTime;
 
     animationFrameId = window.requestAnimationFrame(animationLoop);
 }
