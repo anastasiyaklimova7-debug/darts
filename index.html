@@ -60,8 +60,8 @@
     <canvas id="gameCanvas"></canvas>
 
     <div class="ui-layer">
-        <!-- Score: поднято выше и сдвинуто левее -->
-        <div class="absolute top-[10%] left-[3%] md:top-[12%] md:left-[4%] flex flex-col items-center z-20 -rotate-2 opacity-90">
+        <!-- Score: сдвинуто еще правее -->
+        <div class="absolute top-[10%] left-[15%] md:top-[12%] md:left-[18%] flex flex-col items-center z-20 -rotate-2 opacity-90">
             <span class="text-white/95 text-5xl md:text-7xl font-black leading-none drop-shadow-md" id="scoreDisplay" style="font-family: 'Chalkboard SE', 'Comic Sans MS', cursive;">0</span>
         </div>
 
@@ -69,9 +69,9 @@
             <div id="feedbackMessage" class="text-4xl md:text-6xl font-black opacity-0 transition-all duration-300 drop-shadow-2xl text-center" style="text-shadow: 0 4px 10px rgba(0,0,0,0.8);"></div>
         </div>
 
-        <!-- Поле с предложением: опущено еще ниже (bottom-1 md:bottom-2) -->
-        <div class="absolute bottom-1 md:bottom-2 left-0 w-full flex justify-center z-20 px-2 md:px-4">
-            <div id="sentenceContainer" class="w-full max-w-4xl rounded-2xl p-3 md:p-5 text-center transition-all bg-black/30 backdrop-blur-md border border-white/10 shadow-lg mb-2">
+        <!-- Поле с предложением: опущено максимально вниз -->
+        <div class="absolute bottom-0 left-0 w-full flex justify-center z-20 px-2 md:px-4 pb-1 md:pb-2">
+            <div id="sentenceContainer" class="w-full max-w-4xl rounded-2xl p-3 md:p-5 text-center transition-all bg-black/30 backdrop-blur-md border border-white/10 shadow-lg">
                 <p id="currentSentence" class="text-xl md:text-4xl font-semibold text-white tracking-wide leading-relaxed min-h-[3rem] md:min-h-[4rem] drop-shadow-md"></p>
                 <div id="timerBarContainer" class="w-full h-1.5 bg-black/50 rounded-full mt-3 overflow-hidden hidden opacity-80">
                     <div id="timerBar" class="h-full bg-yellow-400 w-full" style="transition: width 3.2s linear;"></div>
